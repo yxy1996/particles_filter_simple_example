@@ -1,0 +1,64 @@
+function generate_motion
+
+%只是根据x方向上的观测来决定权重
+number =  1000;
+
+% initial pose
+x  = [0;0; pi/6];                                           
+
+% motion model noise
+mu    = [0; 0; 0];
+Sigma = [ 0.001   0     0  ;
+          0    0.001    0;
+          0    0     0.01 ];
+  
+% initial particles
+particles = mvnrnd([0;0;0],[0.01 0 0;0 0.01 0;0 0 10000],number)';
+post_particles = zeros(3,1);
+%figure(1)
+%scatter(particles(1,:),particles(2,:),50,'black');
+%axis([-2,2,-2,2])
+
+% actual position generation
+actual_position = zeros(3,30);
+
+for i =1:30
+   actual_position(:,i) = x;
+   x = x + [cos(x(3)); sin(x(3)); 0 ];
+end
+tic
+t1 = toc;
+for i = 1:30
+   
+   % sensor model
+   mearsurement = actual_position(1,i) + 0.01*randn(1,1);
+   
+   % prediction: particles transform
+   for j = 1:length(particles)
+        particles(:,j) = particles(:,j) + [cos(particles(3,j)); sin(particles(3,j)); 0 ] + mvnrnd(mu,Sigma,1)' ;
+   end
+  % scatter(particles(1,:),particles(2,:),20);
+   % weight sampling   w[j] = p(mearsurment|particles(1,j))
+   for j = 1:length(particles)
+        weight(j) = exp ( ( (-1/2) * ( particles(1,j) - mearsurement)^2 )/(0.01)); 
+   end
+   % normalization
+  weight =  weight/sum(weight);
+ 
+  %resampling
+  seq = roulette(weight,number);
+  post_particles = particles(:,seq);
+ 
+%  figure(2)
+%  scatter(particles(1,:),particles(2,:),50,'black');
+%  axis([-2,2,-2,2])
+%   hold on;
+%   scatter(particles(1,:),particles(2,:),20);
+  figure(3)
+  hold on
+  scatter(post_particles(1,:),post_particles(2,:),50,'black','filled');
+  scatter(actual_position(1,i),actual_position(2,i),80,'d','black');
+  scatter(actual_position(1,i),-actual_position(2,i),80,'d','black');
+  
+  figure(4)
+  hold on
