@@ -62,3 +62,31 @@ for i = 1:30
   
   figure(4)
   hold on
+  scatter(actual_position(1,i),actual_position(2,i),80,'d','black');
+  scatter(actual_position(1,i),-actual_position(2,i),80,'d','black');
+  particles = post_particles;
+  
+end
+t2 = toc;
+t2-t1
+% axis([-40,40,-40,40])
+end
+
+function Select = roulette(P,num)
+
+m = length(P);
+
+Select = zeros(1, num);
+r = rand(1, num);
+for i=1:num
+sumP = 0; 
+j = ceil(m*rand); %产生1~m之间的随机整数
+while sumP < r(i)
+sumP = sumP + P(mod(j-1, m)+1);
+j = j+1;
+end
+Select(i) = mod(j-2, m)+1;
+end
+
+
+end
